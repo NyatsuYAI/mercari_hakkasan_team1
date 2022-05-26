@@ -60,11 +60,15 @@ def root():
 def get_userid_from_name(user_name: str = Form(...)):
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
-    cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
-    user_id = cur.fetchone()[0]
-    conn.commit()
-    conn.close()
-    return user_id
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+        user_id = cur.fetchone()[0]
+        conn.commit()
+        conn.close()
+        return user_id
+    except:
+        return "account don't exsist"
+
 
 
 @app.post("/user")
@@ -73,13 +77,17 @@ def add_user(user_name: str = Form(...)):
     cur = conn.cursor()
     if cur.fetchone() == None:
         init_database()
-    cur.execute("""insert or ignore into users(user_name) values (?)""", (user_name,))
-    logger.info(f"insert user: {user_name}")
-    cur.execute("""select * from users""")
-    user = cur.fetchall()
-    conn.commit()
-    conn.close()
-    logger.info(f"register account: {user}")
+    try:
+        cur.execute("""insert or ignore into users(user_name) values (?)""", (user_name,))
+        logger.info(f"insert user: {user_name}")
+        cur.execute("""select * from users""")
+        user = cur.fetchall()
+        conn.commit()
+        conn.close()
+        logger.info(f"register account: {user}")
+        return "account is published"
+    except:
+        return "failed making account"
 
 
 @app.get("/follows")
@@ -122,7 +130,7 @@ def add_following(user_name: str = Form(...), following_name: str = Form(...)):
         following_id = cur.fetchone()[0]
     except:
         return "Account dont't exist"
-        
+
     cur.execute(
         """insert or ignore into follows(user_id,following_id) values (?,?)""",(user_id, following_id))
     cur.execute("""select * from follows where user_id = (?)""", (user_id,))
