@@ -12,8 +12,7 @@ import json
 from pathlib import Path
 import sqlite3
 import hashlib
-
-import function
+import datetime
 
 data_base_name = "../db/mercari.sqlite3"
 
@@ -31,22 +30,10 @@ app.add_middleware(
 )
 
 
-def get_timestamp():
-    conn = sqlite3.connect(data_base_name)
-    cur = conn.cursor()
-    if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    cur.execute("""SELECT datetime('now', '+9 hours')""")
-    timestamp = cur.fetchone()
-    conn.commit()
-    conn.close()
-    return timestamp
-
+def get_now_timestamp():
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))  # 日本時刻
+    string_now = now.strftime("%Y%m%d%H%M%S")
+    return string_now
 
 @app.on_event("startup")
 def init_database():
@@ -61,6 +48,7 @@ def init_database():
         logger.info("Completed database initialization.")
     except Exception as e:
         logger.warn(f"Failed to initialize database. Error message: {e}")
+        exit()
 
 
 @app.get("/")
@@ -68,56 +56,12 @@ def root():
     return {"message": "Hello, world!"}
 
 
-def get_post(user_name: str = Form(...)):
-    conn = sqlite3.connect(data_base_name)
-    cur = conn.cursor()
-    if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    user_id = get_user(user_name)
-    cur.execute("""select following_id from follows where user_id = (?)""", user_id)
-    follows = cur.fetchall()
-    conn.commit()
-    conn.close()
-    logger.info("Get follows")
-    return follows
-
-
-@app.get("/items")
-def get_user_id(user_name: str = Form(...)):
-    conn = sqlite3.connect(data_base_name)
-    cur = conn.cursor()
-    if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    user_id = get_user(user_name)
-    cur.execute("""select * from items where user_id = (?)""", user_id)
-    items = cur.fetchall()
-    conn.commit()
-    conn.close()
-    logger.info("Get items")
-    return items
-
-
 @app.get("/user")
 def get_userid_from_name(user_name: str = Form(...)):
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
-    if cur.fetchone() == None:
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    cur.execute("""select user_id from users where name = (?)""", (user_name,))
-    user_id = cur.fetchone()
+    cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+    user_id = cur.fetchone()[0]
     conn.commit()
     conn.close()
     return user_id
@@ -128,40 +72,61 @@ def add_user(user_name: str = Form(...)):
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
     if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    cur.execute("""insert or ignore into users(name) values (?)""", (user_name,))
+        init_database()
+    cur.execute("""insert or ignore into users(user_name) values (?)""", (user_name,))
     logger.info(f"insert user: {user_name}")
     cur.execute("""select * from users""")
     user = cur.fetchall()
     conn.commit()
     conn.close()
-    logger.info(f"Post user: {user}")
+    logger.info(f"register account: {user}")
+
+
+@app.get("/follows")
+def get_userid_from_name(user_name: str = Form(...)):
+    conn = sqlite3.connect(data_base_name)
+    cur = conn.cursor()
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+        user_id = cur.fetchone()[0]
+    except:
+        return "Please register account"
+    
+    cur.execute("""select * from follows where user_id = (?)""", (user_id,))
+    following = cur.fetchall()
+    follows_list=[]
+    for i in range(len(following)):
+        cur.execute("""select user_name from users where user_id = (?)""", (following[i][2],))
+        name=[following[i][2], cur.fetchone()[0]]
+        follows_list.append(name)
+    conn.commit()
+    conn.close()
+    return follows_list
 
 
 @app.post("/follows")
-def add_user(user_name: int = Form(...), following_name: int = Form(...)):
+def add_following(user_name: str = Form(...), following_name: str = Form(...)):
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
     if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    user_id = get_user(user_name)
-    following_id = get_user(following_name)
+        init_database()
+
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+        user_id = cur.fetchone()[0]
+    except:
+        return "Please register account"
+
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (following_name,))
+        following_id = cur.fetchone()[0]
+    except:
+        return "Account dont't exist"
+        
     cur.execute(
-        """select * from follows where user_id = (?) and following_id = (?)""",
-        user_id,
-        following_id,
-    )
-    follows = cur.fetchone()
+        """insert or ignore into follows(user_id,following_id) values (?,?)""",(user_id, following_id))
+    cur.execute("""select * from follows where user_id = (?)""", (user_id,))
+    follows = cur.fetchall()
     conn.commit()
     conn.close()
     logger.info(f"Post follows : {follows}")
@@ -184,8 +149,8 @@ def add_user_item(
             logger.debug("Read schema file.")
         cur.executescript(f"""{schema}""")
         conn.commit()
-    user_id = get_user(user_name)
-    timestamp = get_timestamp()
+    user_id = get_userid_from_name(user_name)
+    timestamp = get_now_timestamp()
     cur.execute(
         """insert into items(name,user_id,category,info,timestamp,image) values (?,?,?,?,?,?)""",
         (item_name, user_id, category, info, timestamp, image),
