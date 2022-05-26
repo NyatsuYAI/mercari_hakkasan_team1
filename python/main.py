@@ -66,7 +66,8 @@ def get_userid_from_name(user_name: str = Form(...)):
         conn.commit()
         conn.close()
         return user_id
-    except:
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
         return "account don't exsist"
 
 
@@ -86,18 +87,20 @@ def add_user(user_name: str = Form(...)):
         conn.close()
         logger.info(f"register account: {user}")
         return "account is published"
-    except:
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
         return "failed making account"
 
 
 @app.get("/follows")
-def get_userid_from_name(user_name: str = Form(...)):
+def get_follows_from_name(user_name: str = Form(...)):
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
     try:
         cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
         user_id = cur.fetchone()[0]
-    except:
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
         return "Please register account"
     
     cur.execute("""select * from follows where user_id = (?)""", (user_id,))
@@ -122,13 +125,15 @@ def add_following(user_name: str = Form(...), following_name: str = Form(...)):
     try:
         cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
         user_id = cur.fetchone()[0]
-    except:
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
         return "Please register account"
 
     try:
         cur.execute("""select user_id from users where user_name = (?)""", (following_name,))
         following_id = cur.fetchone()[0]
-    except:
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
         return "Account dont't exist"
 
     cur.execute(
@@ -138,6 +143,32 @@ def add_following(user_name: str = Form(...), following_name: str = Form(...)):
     conn.commit()
     conn.close()
     logger.info(f"Post follows : {follows}")
+
+@app.get("/items")
+def get_all_item_from_user_id(user_name: str = Form(...)):
+    conn = sqlite3.connect(data_base_name)
+    cur = conn.cursor()
+    if cur.fetchone() == None:
+        init_database()
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+        user_id = cur.fetchone()[0]
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
+        return "account don't exsist"
+
+    try:
+        cur.execute("""select * from items where user_id = (?) order by timestamp asc""", (user_id,))
+        items = cur.fetchall()
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
+        return "failed post items"
+    conn.commit()
+    logger.info(f"get items: {items}")
+    conn.close()
+    return items
+    
+
 
 
 @app.post("/items")
@@ -151,24 +182,49 @@ def add_user_item(
     conn = sqlite3.connect(data_base_name)
     cur = conn.cursor()
     if cur.fetchone() == None:
-        logger.info(f"table not exists")
-        with open("../db/item.db") as schema_file:
-            schema = schema_file.read()
-            logger.debug("Read schema file.")
-        cur.executescript(f"""{schema}""")
-        conn.commit()
-    user_id = get_userid_from_name(user_name)
-    timestamp = get_now_timestamp()
-    cur.execute(
-        """insert into items(name,user_id,category,info,timestamp,image) values (?,?,?,?,?,?)""",
-        (item_name, user_id, category, info, timestamp, image),
-    )
-    cur.execute("""select timestamp from items where timestamp = (?)""", timestamp)
-    item = cur.fetchone()
-    conn.commit()
-    conn.close()
-    logger.info(f"Post item: {item}")
+        init_database()
 
+    try:
+        cur.execute("""select user_id from users where user_name = (?)""", (user_name,))
+        user_id = cur.fetchone()[0]
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
+        return "account don't exsist"
+    
+    timestamp = get_now_timestamp()
+    hashed_filename = (
+        hashlib.sha256(image.replace(".jpg", "").encode("utf-8")).hexdigest() + ".jpg"
+    )
+    try:
+        cur.execute(
+            """insert into items(user_name,user_id,item_name,category,info,timestamp,image) values (?,?,?,?,?,?,?)""",
+            (user_name, user_id, item_name,category, info, timestamp, hashed_filename),
+        )
+        cur.execute("""select * from items where timestamp = (?) and user_id = (?)""", (timestamp,user_id))
+        item = cur.fetchall()
+        conn.commit()
+        conn.close()
+        logger.info(f"Post item: {item}")
+        return "post successfully"
+
+    except AssertionError as e:
+        logger.info(f"ERR: {e}")
+        return "failed post items"
+
+
+@app.get("/image/{image_filename}")
+async def get_image(image_filename):
+    # Create image path
+    image = image / image_filename
+
+    if not image_filename.endswith(".jpg"):
+        raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
+
+    if not image.exists():
+        logger.debug(f"Image not found: {image}")
+        image = images / "default.jpg"
+
+    return FileResponse(image)
 
 # @app.post("/items")
 # def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
