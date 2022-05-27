@@ -1,0 +1,31 @@
+.navigation-top{
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    padding: 10px;
+}
+.start-section{
+    flex-basis: 10%;
+}
+
+.mercari-logo{
+    width: 100%;
+    height: 100%;
+}
+
+.center-section{
+    flex-basis: 70%;
+}
+
+.desktop-container{
+    font-size: 14px;
+}
+
+.desktop-containuer{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.desktop-container-list{
+    padding: 8px;
+}
