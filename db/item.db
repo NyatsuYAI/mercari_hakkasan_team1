@@ -1,7 +1,24 @@
-CREATE TABLE IF NOT EXISTS items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category_id INTEGER ,image TEXT 
+PRAGMA foreign_keys=true;
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    name TEXT
 );
 
-CREATE TABLE IF NOT EXISTS category(
-    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE
-)
+CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    user_id INTEGER ,
+    name TEXT,
+    category TEXT,
+    info TEXT,
+    timestamp INTEGER ,
+    image TEXT ,
+    foreign key (user_id) references users(id)
+);
+
+CREATE TABLE IF NOT EXISTS follows(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER , 
+    following_id INTEGER,
+    foreign key (user_id) references users(id),
+    foreign key (following_id) references users(id)
+);

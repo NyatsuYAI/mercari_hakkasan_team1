@@ -1,0 +1,83 @@
+h1 {
+    font-size: 17px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 17px;
+    color: #666666;
+}
+
+.center-column {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    padding: 36px 60px 36px 40px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+form {
+    display: flex;
+    flex-flow: column;
+}
+
+form input {
+    padding: 16px 16px 16px 16px;
+}
+
+form select {
+    padding: 16px 16px 16px 16px;
+}
+
+form p {
+    font-size: 14px;
+    margin: 12px 0px 0px 0px;
+    font-weight: bold;
+}
+
+.listing-button {
+    font-size: 15px;
+    font-weight: bold;
+    padding: 11px 15px 11px 15px;
+    background-color: #ff333f;
+    color: #FFFFFF;
+    box-sizing: border-box;
+    border-color: transparent;
+    border-radius: 4px;
+    border-style: solid;
+}
+
+.listing-button:hover {
+    background-color: #ff6574;
+    cursor: pointer;
+}
+
+.listing-image {
+    font-size: 15px;
+}
+
+label {
+    background-color: transparent;
+    border-style: solid;
+    border-color: #ff333f;
+    border-radius: 4px;
+    border-width: 2px;
+    color: #ff333f;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+    padding: 11px 15px 11px 15px;
+    border: 1px 1px 1px 1px;
+}
+
+label input {
+    display: none;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

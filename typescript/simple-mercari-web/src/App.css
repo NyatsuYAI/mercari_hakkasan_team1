@@ -1,0 +1,67 @@
+.App {
+    text-align: center;
+}
+
+.Title {
+    min-height: 8vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: left;
+    font-size: calc(10px + 1vmin);
+    color: rgb(95, 77, 77);
+}
+
+.Listing {
+    min-height: 8vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 1vmin);
+    color: white;
+}
+
+.ItemListWrapper {
+    min-height: 8vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    flex-direction: column;
+    align-content: space-around;
+    font-size: calc(10px + 1vmin);
+    color: rgb(95, 77, 77);
+}
+
+.ItemList {
+    background-color: #f8f6f7;
+    min-height: 8vh;
+    display: flex;
+    align-content: space-around;
+    flex-direction: column;
+    align-items: center;
+    justify-content: left;
+    font-size: calc(10px + 1vmin);
+    color: rgb(95, 77, 77);
+}
+
+.App-link {
+    color: #61dafb;
+}
+
+input {
+    font-size: 100%;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+@keyframes App-logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

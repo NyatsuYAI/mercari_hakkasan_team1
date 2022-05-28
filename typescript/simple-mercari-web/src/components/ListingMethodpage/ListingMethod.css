@@ -1,0 +1,44 @@
+h1{
+    font-size: 17px;
+    text-align: center;
+}
+
+h2{
+    font-size: 17px;
+    color: #666666;
+}
+.center-column {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    padding: 36px 60px 36px 40px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.loginform{
+    display: flex;
+    flex-flow: column;
+}
+
+.loginform input{
+    padding: 16px 16px 16px 16px;
+}
+
+.loginform p{
+    font-size: 14px;
+    margin: 24px 0px 0px 0px;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    font-weight: bold;
+}
+
+.loginform button{
+    font-size: 15px;
+    font-weight: bold;
+    padding: 11px 15px 11px 15px;
+    background-color: #ff333f;
+    color: #FFFFFF;
+    box-sizing: border-box;
+    border-color: transparent;
+    border-radius: 4px;
+}
